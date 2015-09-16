@@ -1,0 +1,12 @@
+# Site settings
+title: aditya viswanathan
+email: aditya@adityaviswanathan.com
+description: > # this means to ignore newlines until "baseurl:"
+  my little slice of the internet
+baseurl: "" # the subpath of your site, e.g. /blog/
+url: "http://yourdomain.com" # the base hostname & protocol for your site
+twitter_username: adityavis
+github_username:  adityaviswanathan
+
+# Build settings
+markdown: kramdown
