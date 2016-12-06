@@ -4,8 +4,8 @@ title: About
 permalink: /about/
 ---
 
-I'm Aditya Viswanathan.
+I'm Adi.
 
-- a junior at Stanford
-- studying Computer Science
+- senior at Stanford
+- studying Computer Science and Philosophy
 - passionate about technology, entrepreneurship, and design

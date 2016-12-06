@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <style>
+      body, html{
+        margin: 0;
+        width: 100%;
+        height: 100%;
+      }
+      rect{
+        fill: black;
+      }
+      tree{
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        z-index: -1;
+        top: 0px;
+        left: 0px;
+      }
+      .controls{
+        float: left;
+        z-index: 1;
+      }
+      .controls input{
+        display: block;
+      }
+      .sentence{
+        float: right;
+        z-index: 1;
+      }
+      .share{
+        float: left;
+        margin: 10px;
+        z-index: 0;
+      }
+      .currentLetter {
+        font-size: 50px;
+        z-index: 1;
+      }
+    </style>
+  </head>
+  <body ng-app="myApp" ng-controller="MainCtrl" ng-init="initAlphabet()">
+    <tree n="n" r="r" m="m" levels="levels" thickness="thickness" opacity="opacity"></tree>
+    <div class="controls">
+      <input type="range" ng-model="n" min="10" value="100" max="300">
+      <input type="range" ng-model="m" min="1" max="7">
+      <input type="range" ng-model="r" min="1" max="360">
+      <input type="range" ng-model="levels" min="1" max="4">
+      <input type="range" ng-model="thickness" min="1" max="50">
+      <input type="range" ng-model="opacity" min="0" max="1" step="0.01">
+
+      
+    </div>
+    <div class="sentence" style="text-align:center;">
+      <input type="text" ng-model="sentence">
+      <input type="submit" ng-click="translateSentence()" value="translate sentence">
+      <p>speed</p>
+      <span>fast</span><input type="range" ng-model="speed" value="100" min="50" max="1000" step="1"><span>slow</span>
+      <br>
+      <input type="submit" ng-click="initAlphabet()" value="new alphabet">
+      <div class="currentLetter"></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.10/d3.min.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.2/angular.min.js" charset="utf-8"></script>
+    <script>
+
+      
+
+      var app = angular.module('myApp', [])
+      app.controller('MainCtrl', function($interval, $scope){
+          var params, found = false
+          try{
+            params = JSON.parse(decodeURIComponent(window.location.hash.replace(/^#/,'')))
+            found = true
+          }catch(e){}
+          console.log('params', params)
+          params = params || { n: 1, r: 1, m: 2, levels: 4, thickness: 10, opacity: 0.5}
+          console.log('params', params)
+          if(!found){
+            var prev_t = 0, total = 2000, rmax = 103, nmax = 100
+            d3.timer(function(t){
+              return $scope.$apply(function(){
+                var dt = t - prev_t
+                prev_t = t
+                if($scope.r < rmax) $scope.r += dt * 0.15
+                if($scope.n < nmax) $scope.n += dt * 0.15
+                if($scope.r >= rmax && $scope.n >= nmax) return true
+              })
+            })
+          }
+          Object.keys(params).forEach(function(prop){
+            $scope[prop] = +params[prop]
+          })
+          $scope.$watch('n * r * m * levels * thickness * opacity', function(){
+            window.location.hash = encodeURIComponent(JSON.stringify({
+                n: +$scope.n
+              , r: +$scope.r
+              , m: +$scope.m
+              , levels: +$scope.levels
+              , thickness: +$scope.thickness
+              , opacity: +$scope.opacity
+            }))
+          })
+
+          function fractalLetter(index) {
+            var letterElement = angular.element(document.querySelector('.currentLetter'));
+            
+            var letter = $scope.sentence.charAt(index);
+            var fractalLetter = $scope.fractalDictionary[letter];   
+            letterElement.text(letter);
+
+            if(index < 0) {
+              letterElement.text(""); 
+            } else {
+              console.log(fractalLetter);
+              $scope.n = fractalLetter["n"];
+              $scope.m = fractalLetter["m"];
+              $scope.r = fractalLetter["r"];
+              $scope.levels = fractalLetter["levels"];
+              $scope.thickness = fractalLetter["thickness"];
+              $scope.opacity = fractalLetter["opacity"];
+              $scope.$apply();
+              // d3.timer(function(t){
+              //   return $scope.$apply(function(){
+                  
+              //   })
+              // })
+              // var prev_t = 0
+              // var interval = 500;
+
+              // var init_n = $scope.n;
+              // var init_m = $scope.m;
+              // var init_r = $scope.r;
+              // var init_levels = $scope.levels;
+              // var init_thickness = $scope.thickness;
+              // var init_opacity = $scope.opacity;
+
+              // var steps = 20;
+              // var increment_n = fractalLetter["n"] > init_n ? Math.round((fractalLetter["n"] - init_n) / steps) : Math.round((init_n - fractalLetter["n"]) / steps);
+              // var increment_m = fractalLetter["m"] > init_m ? Math.round((fractalLetter["m"] - init_m) / steps) : Math.round((init_m - fractalLetter["m"]) / steps);
+              // var increment_r = fractalLetter["r"] > init_r ? Math.round((fractalLetter["r"] - init_r) / steps) : Math.round((init_r - fractalLetter["r"]) / steps);
+              // var increment_levels = fractalLetter["levels"] > init_levels ? Math.round((fractalLetter["levels"] - init_levels) / steps): Math.round((init_levels - fractalLetter["levels"]) / steps);
+              // var increment_thickness = fractalLetter["thickness"] > init_thickness ? Math.round((fractalLetter["thickness"] - init_thickness) / steps) : Math.round((init_thickness - fractalLetter["thickness"]) / steps)
+              // var increment_opacity = fractalLetter["opacity"] > init_opacity ? Math.round((fractalLetter["opacity"] - init_opacity) / steps) : Math.round((init_opacity - fractalLetter["opacity"]) / steps);
+              // var currStep = 1;
+              // var transition = setInterval(function() {
+              //   fractalLetter["n"] > init_n ? $scope.n += increment_n : $scope.n -= increment_n;
+              //   fractalLetter["m"] > init_m ? $scope.m += increment_m : $scope.m -= increment_m;
+              //   fractalLetter["r"] > init_r ? $scope.r += increment_r : $scope.r -= increment_r;
+              //   fractalLetter["levels"] > init_levels ? $scope.levels += increment_levels : $scope.levels -= increment_levels;
+              //   fractalLetter["thickness"] > init_thickness ? $scope.thickness += increment_thickness : $scope.thickness -= increment_thickness;
+              //   fractalLetter["opacity"] > init_opacity ? $scope.opacity += increment_opacity : $scope.opacity -= increment_opacity;
+              //   $scope.$apply();
+              //   if(fractalLetter["n"] > init_n && $scope.n >= fractalLetter["n"]) {
+              //     console.log("CLAREED");
+              //     clearInterval(transition); 
+              //   }
+              // }, 100);              
+            }
+            
+          }
+
+          $scope.translateSentence = function() {
+            console.log("Beginning translation of " + $scope.sentence);
+            index = 0;
+            if($scope.speed === undefined) $scope.speed = 200;
+            var characters = setInterval(function() {
+              if(index == $scope.sentence.length) {
+                fractalLetter(-1);
+                clearInterval(characters); 
+              } else {
+                fractalLetter(index);
+              }
+              index++;
+            }, $scope.speed);
+          }
+
+          $scope.fractalDictionary = {};
+          $scope.initAlphabet = function() {
+            console.log("Initializing alphabet");
+            var alphabet = "1234567890!@#$%^&*()-=_+`~{}[]:;<>?/.,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ";
+            var n_max = 301;
+            var m_max = 8;
+            var r_max = 360;
+            var levels_max = 5;
+            var thickness_max = 51;
+            var opacity_max = 1.0;
+
+            var divFactor = 3;
+            for(var i = 0; i < alphabet.length; i++) {
+              $scope.fractalDictionary[alphabet.charAt(i)] = {
+                "n": Math.floor(Math.random() * (n_max - 11) + 11),
+                "m": Math.floor(Math.random() * (m_max - 2) + 2),
+                "r": Math.floor(Math.random() * (r_max - 2) + 2),
+                "levels": Math.floor(Math.random() * (levels_max - 2) + 2),
+                "thickness": Math.floor(Math.random() * (thickness_max - 2) + 2),
+                "opacity": (0.25 + (opacity_max - 0.25) * Math.random()).toFixed(2),
+              }
+            }
+          }
+      })
+      app.directive('tree', function($interval){
+        function link(scope, el, attr){
+          el = el[0]
+          var width = el.clientWidth, height = el.clientHeight
+          var svg = d3.select(el).append('svg').attr({width: width, height: height})
+          function nest(sel, n, r, m, levels, thickness, opacity){
+            if(levels <= 0) return
+            sel = sel
+              .selectAll('g').data(d3.range(m)).enter().append('g')
+              .attr('transform', function(d){
+                return 'rotate(' + (d / (m - 1) * r - r / 2) + ')'
+              }).call(function(g){ g.append('rect')
+                .attr({width: n, height: thickness, y: -thickness/2}) })
+                .style('opacity', opacity)
+              .append('g').attr('transform', 'translate(' + n + ',0)')
+            nest(sel, n, r, m, levels - 1, thickness, opacity)
+          }
+          scope.$watch('n * r * m * levels * thickness * opacity', function(){
+            var n = +scope.n , r = +scope.r, m = +scope.m, levels = +scope.levels
+              , thickness = +scope.thickness, opacity = +scope.opacity
+            svg.remove()
+            // console.log('n', n, 'r', r, 'm', m, 'levels', levels, 'thickness', thickness, 'opacity', opacity)
+            svg = d3.select(el).append('svg').attr({width: width, height: height})
+            var g = svg.append('g')
+              .attr('transform',
+                'translate(' + width / 2 + ',' + height / 2 + ') rotate(-90)')
+            nest(g, n, r, m, levels, thickness, opacity)
+          })
+        }
+        return {
+          link: link
+          , scope: { n: '=', r: '=', m: '=', levels: '=', thickness: '=', opacity: '='}
+          , restrict: 'E'
+        }
+      })
+
+    </script>
+  </body>
+</html>
